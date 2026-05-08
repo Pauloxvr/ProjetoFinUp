@@ -393,7 +393,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 icon: Icons.check_rounded,
                 variant: SkeuButtonVariant.success,
                 isLoading: _isLoading,
-                onPressed: _isLoading ? null : _register,
+                onPressed: _isLoading ? null : _fazerCadastro,
               ),
 
               const SizedBox(height: 28),

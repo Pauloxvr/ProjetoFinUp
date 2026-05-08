@@ -422,7 +422,7 @@ Widget _buildBackground() {
     );
   }
 
-  Future<void> _editarMeta(MetaModel meta) async {
+  Future<void> _editarMeta(BuildContext context, MetaModel meta) async {
     final tituloController = TextEditingController(text: meta.titulo);
     final valorMetaController = TextEditingController(
       text: meta.valorMeta.toString(),
@@ -492,4 +492,3 @@ Widget _buildBackground() {
       ),
     );
   }
-}
