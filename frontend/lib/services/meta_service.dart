@@ -36,7 +36,7 @@ class MetaService {
   static Future<void> removerMeta(int id) async {
     try {
       await ApiService.delete('/goals/$id');
-      _metas.removeWhere((m) => m.id == id);
+      await carregarMetas();
     } catch (e) {
       rethrow;
     }

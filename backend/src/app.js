@@ -7,7 +7,7 @@ require('./database/db');
 
 // middlewares globais
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://localhost:53795', 'http://127.0.0.1:53795', 'http://localhost:62199', 'http://127.0.0.1:62199'],
+  origin: /^http:\/\/localhost:\d+$/,
   credentials: true,
   methods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']

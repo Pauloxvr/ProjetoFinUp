@@ -19,6 +19,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _agreeTerms = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -391,7 +392,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 text: "Criar Conta",
                 icon: Icons.check_rounded,
                 variant: SkeuButtonVariant.success,
-                onPressed: _fazerCadastro,
+                isLoading: _isLoading,
+                onPressed: _isLoading ? null : _register,
               ),
 
               const SizedBox(height: 28),
@@ -550,6 +552,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       return;
     }
 
+    setState(() => _isLoading = true);
+
     try {
       await AuthService.register(nome: nome, email: email, password: senha);
       await LancamentoService.carregarLancamentos();
@@ -561,7 +565,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } on ApiException catch (e) {
       _showSnackbar(e.message);
     } catch (_) {
-      _showSnackbar("Erro ao cadastrar");
+      _showSnackbar("Erro desconhecido. Tente novamente.");
+    } finally {
+      setState(() => _isLoading = false);
     }
   }
 

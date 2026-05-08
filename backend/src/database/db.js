@@ -78,6 +78,15 @@ db.serialize(() => {
     );
   `);
 
+  // Índices para otimização de queries
+  db.run(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_categories_user_id ON categories(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_incomes_user_id ON incomes(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_incomes_date ON incomes(date)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_expenses_date ON expenses(date)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_goals_user_id ON goals(user_id)`);
+
 });
 
 module.exports = db;

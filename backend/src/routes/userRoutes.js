@@ -7,7 +7,8 @@ const auth = require('../middlewares/authMiddleware');
 // rota pública - cadastro
 router.post('/', userController.create);
 
-// rota protegida - dados do usuário logado
+// rotas protegidas
 router.get('/me', auth, userController.me);
+router.patch('/me', auth, userController.update);
 
 module.exports = router;

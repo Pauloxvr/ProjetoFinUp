@@ -13,27 +13,29 @@ class MetaProvider extends ChangeNotifier {
     _loading = true;
     notifyListeners();
 
-    await MetaService.carregarMetas();
-    _metas = MetaService.metas.toList();
-    _loading = false;
-    notifyListeners();
+    try {
+      await MetaService.carregarMetas();
+      _metas = MetaService.metas.toList();
+    } catch (_) {
+      // Mantém a UI atual e apenas encerra o loading.
+    } finally {
+      _loading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> adicionar(String titulo, double valorMeta) async {
     await MetaService.criarMeta(titulo, valorMeta);
-    _metas = MetaService.metas.toList();
-    notifyListeners();
+    await carregar();
   }
 
   Future<void> atualizar(int id, {double? valorAtual, String? titulo, double? valorMeta}) async {
     await MetaService.atualizarMeta(id, valorAtual: valorAtual, titulo: titulo, valorMeta: valorMeta);
-    _metas = MetaService.metas.toList();
-    notifyListeners();
+    await carregar();
   }
 
   Future<void> remover(int id) async {
     await MetaService.removerMeta(id);
-    _metas = MetaService.metas.toList();
-    notifyListeners();
+    await carregar();
   }
 }

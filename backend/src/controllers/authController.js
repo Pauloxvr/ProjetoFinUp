@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../database/db');
+const { validateEmail, validatePassword } = require('../utils/validators');
 
 // POST /auth/login
 exports.login = (req, res) => {
@@ -9,6 +10,12 @@ exports.login = (req, res) => {
   if (!email || !password) {
     return res.status(400).json({
       error: 'Email e password são obrigatórios'
+    });
+  }
+
+  if (!validateEmail(email) || !validatePassword(password)) {
+    return res.status(400).json({
+      error: 'Email ou senha inválidos'
     });
   }
 

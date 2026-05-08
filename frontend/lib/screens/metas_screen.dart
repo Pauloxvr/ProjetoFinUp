@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_theme.dart';
 import '../models/meta_model.dart';
-import '../services/meta_service.dart';
+import '../providers/meta_provider.dart';
 import '../widgets/meta_card.dart';
 import '../widgets/skeu_button.dart';
 
@@ -13,113 +14,113 @@ class MetasScreen extends StatefulWidget {
 }
 
 class _MetasScreenState extends State<MetasScreen> {
-  bool _loading = true;
-
   @override
   void initState() {
     super.initState();
-    _carregarMetas();
-  }
-
-  Future<void> _carregarMetas() async {
-    setState(() => _loading = true);
-    await MetaService.carregarMetas();
-    setState(() => _loading = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<MetaProvider>().carregar();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final metas = MetaService.metas;
+    return Consumer<MetaProvider>(
+      builder: (context, metaProvider, child) {
+        final metas = metaProvider.metas;
+        final loading = metaProvider.loading;
 
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: Stack(
-        children: [
-          /// Background decorativo
-          _buildBackground(),
+        return Scaffold(
+          backgroundColor: AppTheme.background,
+          body: Stack(
+            children: [
+              /// Background decorativo
+              _buildBackground(),
 
-          SafeArea(
-            child: _loading
-                ? const Center(child: CircularProgressIndicator())
-                : Column(
-                    children: [
-                      /// Header
-                      _buildHeader(),
+              SafeArea(
+                child: loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
+                        children: [
+                          /// Header
+                          _buildHeader(),
 
-                      /// Resumo de metas
-                      _buildResumo(metas),
+                          /// Resumo de metas
+                          _buildResumo(metas),
 
-                      /// Lista de metas
-                      Expanded(
-                        child: RefreshIndicator(
-                          onRefresh: _carregarMetas,
-                          child: ListView.builder(
-                            physics: const BouncingScrollPhysics(),
-                            padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-                            itemCount: metas.length,
-                            itemBuilder: (context, index) => MetaCard(
-                              meta: metas[index],
-                              onTap: () => _editarMeta(metas[index]),
+                          /// Lista de metas
+                          Expanded(
+                            child: RefreshIndicator(
+                              onRefresh: metaProvider.carregar,
+                              child: ListView.builder(
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+                                itemCount: metas.length,
+                                itemBuilder: (context, index) => MetaCard(
+                                  meta: metas[index],
+                                  onTap: () => _editarMeta(context, metas[index]),
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-          ),
+              ),
 
-          /// FAB
-          Positioned(
-            bottom: 30,
-            left: 20,
-            right: 20,
-            child: _buildAddButton(context),
+              /// FAB
+              Positioned(
+                bottom: 30,
+                left: 20,
+                right: 20,
+                child: _buildAddButton(context),
+              ),
+            ],
           ),
-        ],
+        );
+      },
+    );
+  }
+}
+
+Widget _buildBackground() {
+  return Stack(
+    children: [
+      Positioned(
+        top: -60,
+        left: -40,
+        child: Container(
+          width: 200,
+          height: 200,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                AppTheme.skyBlue.withOpacity(0.25),
+                AppTheme.skyBlue.withOpacity(0.0),
+              ],
+            ),
+          ),
+        ),
       ),
-    );
-  }
-
-  Widget _buildBackground() {
-    return Stack(
-      children: [
-        Positioned(
-          top: -60,
-          left: -40,
-          child: Container(
-            width: 200,
-            height: 200,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  AppTheme.skyBlue.withOpacity(0.25),
-                  AppTheme.skyBlue.withOpacity(0.0),
-                ],
-              ),
+      Positioned(
+        bottom: 100,
+        right: -60,
+        child: Container(
+          width: 180,
+          height: 180,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(
+              colors: [
+                AppTheme.primaryBlue.withOpacity(0.15),
+                AppTheme.primaryBlue.withOpacity(0.0),
+              ],
             ),
           ),
         ),
-        Positioned(
-          bottom: 100,
-          right: -60,
-          child: Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [
-                  AppTheme.primaryBlue.withOpacity(0.15),
-                  AppTheme.primaryBlue.withOpacity(0.0),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildHeader() {
     return Padding(
@@ -397,9 +398,21 @@ class _MetasScreenState extends State<MetasScreen> {
             onPressed: () async {
               final titulo = tituloController.text;
               final valor = double.tryParse(valorController.text);
-              if (titulo.isNotEmpty && valor != null && valor > 0) {
-                await MetaService.criarMeta(titulo, valor);
+              if (titulo.isEmpty || valor == null || valor <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Informe título e valor válido.')),
+                );
+                return;
+              }
+
+              final metaProvider = Provider.of<MetaProvider>(context, listen: false);
+              try {
+                await metaProvider.adicionar(titulo, valor);
                 if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro ao criar meta: $e')),
+                );
               }
             },
             child: const Text('Salvar'),
@@ -451,14 +464,26 @@ class _MetasScreenState extends State<MetasScreen> {
               final titulo = tituloController.text;
               final valorMeta = double.tryParse(valorMetaController.text);
               final valorAtual = double.tryParse(valorAtualController.text);
-              if (titulo.isNotEmpty && valorMeta != null && valorMeta > 0) {
-                await MetaService.atualizarMeta(
+              if (titulo.isEmpty || valorMeta == null || valorMeta <= 0) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Informe título e valor meta válidos.')),
+                );
+                return;
+              }
+
+              final metaProvider = Provider.of<MetaProvider>(context, listen: false);
+              try {
+                await metaProvider.atualizar(
                   meta.id,
                   titulo: titulo,
                   valorMeta: valorMeta,
                   valorAtual: valorAtual ?? meta.valorAtual,
                 );
                 if (context.mounted) Navigator.pop(context);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Erro ao atualizar meta: $e')),
+                );
               }
             },
             child: const Text('Salvar'),

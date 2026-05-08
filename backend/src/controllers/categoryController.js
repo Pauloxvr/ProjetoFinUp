@@ -46,6 +46,45 @@ exports.list = (req, res) => {
   });
 };
 
+// PATCH /categories/:id
+exports.update = (req, res) => {
+  const { id } = req.params;
+  const { name, type } = req.body;
+
+  const fields = [];
+  const params = [];
+
+  if (name !== undefined) {
+    fields.push('name = ?');
+    params.push(name);
+  }
+  if (type !== undefined) {
+    if (!['income', 'expense'].includes(type)) {
+      return res.status(400).json({ error: "type deve ser 'income' ou 'expense'" });
+    }
+    fields.push('type = ?');
+    params.push(type);
+  }
+
+  if (fields.length === 0) {
+    return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+  }
+
+  params.push(id, req.userId);
+
+  db.run(
+    `UPDATE categories SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Categoria não encontrada' });
+      }
+      res.json({ message: 'Categoria atualizada' });
+    }
+  );
+};
+
 // DELETE /categories/:id
 exports.remove = (req, res) => {
   const { id } = req.params;

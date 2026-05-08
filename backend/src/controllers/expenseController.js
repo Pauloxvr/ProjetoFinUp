@@ -33,18 +33,35 @@ exports.create = (req, res) => {
 
 // GET /expenses
 exports.list = (req, res) => {
-  db.all(
-    `SELECT e.*, c.name AS category_name
-     FROM expenses e
-     LEFT JOIN categories c ON c.id = e.category_id
-     WHERE e.user_id = ?
-     ORDER BY e.date DESC, e.id DESC`,
-    [req.userId],
-    (err, rows) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json(rows);
-    }
-  );
+  const { category_id, start_date, end_date, month, year } = req.query;
+
+  let sql = `SELECT e.*, c.name AS category_name
+             FROM expenses e
+             LEFT JOIN categories c ON c.id = e.category_id
+             WHERE e.user_id = ?`;
+  const params = [req.userId];
+
+  if (category_id) {
+    sql += ` AND e.category_id = ?`;
+    params.push(category_id);
+  }
+
+  if (start_date && end_date) {
+    sql += ` AND e.date BETWEEN ? AND ?`;
+    params.push(start_date, end_date);
+  }
+
+  if (month && year) {
+    sql += ` AND strftime('%m', e.date) = ? AND strftime('%Y', e.date) = ?`;
+    params.push(String(month).padStart(2, '0'), year);
+  }
+
+  sql += ` ORDER BY e.date DESC, e.id DESC`;
+
+  db.all(sql, params, (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 };
 
 // DELETE /expenses/:id
