@@ -1,22 +1,23 @@
-import 'dart:convert';
+﻿import 'package:flutter/material.dart';
 import 'api_service.dart';
 
 /// Serviço de autenticação.
 /// Gerencia login, registro e dados do usuário via API + JWT.
-class AuthService {
-  static bool _isLogged = false;
-  static String _nome = '';
-  static String _email = '';
-  static String _token = '';
+class AuthService extends ChangeNotifier {
+  bool _isLogged = false;
+  String _nome = '';
+  String _email = '';
+  String _token = '';
+  bool _loading = false;
 
-  static bool isLogged() => _isLogged;
-
-  static String get nome => _nome;
-  static String get email => _email;
-  static String get token => _token;
+  bool get isLogged => _isLogged;
+  bool get loading => _loading;
+  String get nome => _nome;
+  String get email => _email;
+  String get token => _token;
 
   /// Iniciais do nome para o avatar placeholder
-  static String get iniciais {
+  String get iniciais {
     if (_nome.isEmpty) return '?';
     final partes = _nome.trim().split(' ');
     if (partes.length >= 2) {
@@ -26,7 +27,7 @@ class AuthService {
   }
 
   /// Tenta carregar sessão salva
-  static Future<bool> tryAutoLogin() async {
+  Future<bool> tryAutoLogin() async {
     _token = await ApiService.getToken() ?? '';
     if (_token.isEmpty) return false;
 
@@ -36,6 +37,7 @@ class AuthService {
       _nome = data['name'] ?? '';
       _email = data['email'] ?? '';
       _isLogged = true;
+      notifyListeners();
       return true;
     } catch (_) {
       await logout();
@@ -44,7 +46,9 @@ class AuthService {
   }
 
   /// Login via API backend
-  static Future<void> login({required String email, required String password}) async {
+  Future<void> login({required String email, required String password}) async {
+    _setLoading(true);
+    try {
     final response = await ApiService.post(
       '/auth/login',
       {'email': email, 'password': password},
@@ -58,14 +62,20 @@ class AuthService {
     _isLogged = true;
 
     await ApiService.setToken(_token);
+      notifyListeners();
+    } finally {
+      _setLoading(false);
+    }
   }
 
   /// Registro via API backend
-  static Future<void> register({
+  Future<void> register({
     required String nome,
     required String email,
     required String password,
   }) async {
+    _setLoading(true);
+    try {
     final response = await ApiService.post(
       '/users',
       {'name': nome, 'email': email, 'password': password},
@@ -75,13 +85,23 @@ class AuthService {
     ApiService.decodeResponse(response);
     // Após registro, faz login automático
     await login(email: email, password: password);
+    } finally {
+      _setLoading(false);
+    }
   }
 
-  static Future<void> logout() async {
+  Future<void> logout() async {
+    await ApiService.removeToken();
     _isLogged = false;
     _nome = '';
     _email = '';
     _token = '';
-    await ApiService.removeToken();
+    notifyListeners();
+  }
+
+  void _setLoading(bool value) {
+    _loading = value;
+    notifyListeners();
   }
 }
+

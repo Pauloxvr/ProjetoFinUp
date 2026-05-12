@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_routes.dart';
 import '../core/app_theme.dart';
 import '../services/auth_service.dart';
@@ -15,6 +16,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _rememberMe = true;
@@ -28,6 +30,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthService>();
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Stack(
@@ -276,8 +280,12 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               const SizedBox(height: 32),
 
-              /// Email
-              SkeuInput(
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    /// Email
+                    SkeuInput(
                 label: "Email",
                 hint: "seu@email.com",
                 controller: _emailController,
@@ -287,6 +295,11 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Color(0xff94a3b8),
                   size: 20,
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Informe o email';
+                  if (!value.contains('@')) return 'Email inválido';
+                  return null;
+                },
               ),
               const SizedBox(height: 20),
 
@@ -301,35 +314,26 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Color(0xff94a3b8),
                   size: 20,
                 ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) return 'Informe a senha';
+                  if (value.length < 6) return 'Mínimo 6 caracteres';
+                  return null;
+                },
+              ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
 
-              /// Remember + Forgot
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      _buildSkeuCheckbox(),
-                      const SizedBox(width: 8),
-                      const Text(
-                        "Lembrar-me",
-                        style: TextStyle(
-                          color: Color(0xff64748b),
-                          fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const Text(
-                      "Esqueceu a senha?",
-                      style: TextStyle(
-                        color: AppTheme.primaryBlue,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
+                  _buildSkeuCheckbox(),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Lembrar-me",
+                    style: TextStyle(
+                      color: Color(0xff64748b),
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -341,66 +345,10 @@ class _LoginScreenState extends State<LoginScreen> {
               SkeuButton(
                 text: "Entrar",
                 icon: Icons.login_rounded,
-                onPressed: _fazerLogin,
+                isLoading: authProvider.loading,
+                onPressed: authProvider.loading ? null : _fazerLogin,
               ),
 
-              const SizedBox(height: 28),
-
-              /// Divider
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            Colors.transparent,
-                            AppTheme.silverMist,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "ou continue com",
-                      style: TextStyle(
-                        color: Color(0xff94a3b8),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [
-                            AppTheme.silverMist,
-                            Colors.transparent,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              /// Social login buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(Icons.g_mobiledata, const Color(0xffea4335)),
-                  const SizedBox(width: 16),
-                  _buildSocialButton(Icons.apple, const Color(0xff1e293b)),
-                  const SizedBox(width: 16),
-                  _buildSocialButton(Icons.facebook, const Color(0xff1877f2)),
-                ],
-              ),
             ],
           ),
         ],
@@ -449,63 +397,19 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton(IconData icon, Color color) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppTheme.cardLightGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.8),
-          width: 1,
-        ),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Stack(
-        children: [
-          // Brilho
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 24,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.5),
-                    Colors.white.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Center(
-            child: Icon(icon, color: color, size: 28),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _fazerLogin() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final email = _emailController.text.trim();
     final senha = _senhaController.text.trim();
-
-    if (email.isEmpty || senha.isEmpty) {
-      _showSnackbar("Preencha email e senha");
-      return;
-    }
+    final authProvider = context.read<AuthService>();
+    final lancamentoProvider = context.read<LancamentoService>();
 
     try {
-      await AuthService.login(email: email, password: senha);
-      await LancamentoService.carregarLancamentos();
+      await authProvider.login(email: email, password: senha);
+      await lancamentoProvider.carregarLancamentos();
+      
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     } on ApiException catch (e) {
       _showSnackbar(e.message);
@@ -527,3 +431,4 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+

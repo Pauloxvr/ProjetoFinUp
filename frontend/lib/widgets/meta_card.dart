@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/meta_model.dart';
 import '../core/app_theme.dart';
 
@@ -269,3 +269,4 @@ class MetaCard extends StatelessWidget {
     return const Color(0xffef4444);
   }
 }
+

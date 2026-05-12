@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 
 /// Botão skeuomorphic com efeito 3D e gradientes
@@ -207,3 +207,4 @@ enum SkeuButtonVariant {
   danger,
   ghost,
 }
+

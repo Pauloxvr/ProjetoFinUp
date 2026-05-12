@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_routes.dart';
 import '../core/app_theme.dart';
 import '../services/auth_service.dart';
@@ -15,11 +16,11 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _agreeTerms = true;
-  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -31,6 +32,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = context.watch<AuthService>();
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: Stack(
@@ -308,43 +311,60 @@ class _RegisterScreenState extends State<RegisterScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// Nome
-              SkeuInput(
-                label: "Nome Completo",
-                hint: "João Silva",
-                controller: _nomeController,
-                prefixIcon: const Icon(
-                  Icons.person_outline_rounded,
-                  color: Color(0xff94a3b8),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(height: 20),
+              Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    /// Nome
+                    SkeuInput(
+                      label: "Nome Completo",
+                      hint: "João Silva",
+                      controller: _nomeController,
+                      prefixIcon: const Icon(
+                        Icons.person_outline_rounded,
+                        color: Color(0xff94a3b8),
+                        size: 20,
+                      ),
+                      validator: (value) =>
+                          value == null || value.isEmpty ? "Informe seu nome" : null,
+                    ),
+                    const SizedBox(height: 20),
 
-              /// Email
-              SkeuInput(
-                label: "Email",
-                hint: "seu@email.com",
-                controller: _emailController,
-                keyboardType: TextInputType.emailAddress,
-                prefixIcon: const Icon(
-                  Icons.email_outlined,
-                  color: Color(0xff94a3b8),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(height: 20),
+                    /// Email
+                    SkeuInput(
+                      label: "Email",
+                      hint: "seu@email.com",
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      prefixIcon: const Icon(
+                        Icons.email_outlined,
+                        color: Color(0xff94a3b8),
+                        size: 20,
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return 'Informe o email';
+                        if (!value.contains('@')) return 'Email inválido';
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
 
-              /// Senha
-              SkeuInput(
-                label: "Senha",
-                hint: "Mínimo 6 caracteres",
-                controller: _senhaController,
-                obscureText: true,
-                prefixIcon: const Icon(
-                  Icons.lock_outline_rounded,
-                  color: Color(0xff94a3b8),
-                  size: 20,
+                    /// Senha
+                    SkeuInput(
+                      label: "Senha",
+                      hint: "Mínimo 6 caracteres",
+                      controller: _senhaController,
+                      obscureText: true,
+                      prefixIcon: const Icon(
+                        Icons.lock_outline_rounded,
+                        color: Color(0xff94a3b8),
+                        size: 20,
+                      ),
+                      validator: (value) => value != null && value.length < 6
+                          ? "Mínimo 6 caracteres"
+                          : null,
+                    ),
+                  ],
                 ),
               ),
               const SizedBox(height: 20),
@@ -392,53 +412,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 text: "Criar Conta",
                 icon: Icons.check_rounded,
                 variant: SkeuButtonVariant.success,
-                isLoading: _isLoading,
-                onPressed: _isLoading ? null : _fazerCadastro,
+                isLoading: authProvider.loading,
+                onPressed: authProvider.loading ? null : _fazerCadastro,
               ),
 
-              const SizedBox(height: 28),
-
-              /// Divider
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppTheme.silverMist,
-                    ),
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Text(
-                      "ou cadastre-se com",
-                      style: TextStyle(
-                        color: Color(0xff94a3b8),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Container(
-                      height: 1,
-                      color: AppTheme.silverMist,
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              /// Social login buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildSocialButton(Icons.g_mobiledata, const Color(0xffea4335)),
-                  const SizedBox(width: 16),
-                  _buildSocialButton(Icons.apple, const Color(0xff1e293b)),
-                  const SizedBox(width: 16),
-                  _buildSocialButton(Icons.facebook, const Color(0xff1877f2)),
-                ],
-              ),
             ],
           ),
         ],
@@ -493,70 +470,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  Widget _buildSocialButton(IconData icon, Color color) {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: BoxDecoration(
-        gradient: AppTheme.cardLightGradient,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.white.withOpacity(0.8),
-          width: 1,
-        ),
-        boxShadow: AppTheme.softShadow,
-      ),
-      child: Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 24,
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.5),
-                    Colors.white.withOpacity(0.0),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          Center(
-            child: Icon(icon, color: color, size: 28),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _fazerCadastro() async {
+    if (!_formKey.currentState!.validate()) return;
+
     final nome = _nomeController.text.trim();
     final email = _emailController.text.trim();
     final senha = _senhaController.text.trim();
-
-    if (nome.isEmpty || email.isEmpty || senha.isEmpty) {
-      _showSnackbar("Preencha todos os campos");
-      return;
-    }
 
     if (!_agreeTerms) {
       _showSnackbar("Aceite os termos para continuar");
       return;
     }
-
-    setState(() => _isLoading = true);
+    
+    final authProvider = context.read<AuthService>();
+    final lancamentoProvider = context.read<LancamentoService>();
 
     try {
-      await AuthService.register(nome: nome, email: email, password: senha);
-      await LancamentoService.carregarLancamentos();
+      await authProvider.register(nome: nome, email: email, password: senha);
+      await lancamentoProvider.carregarLancamentos();
+      
+      if (!mounted) return;
       Navigator.pushNamedAndRemoveUntil(
         context,
         AppRoutes.home,
@@ -566,8 +499,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _showSnackbar(e.message);
     } catch (_) {
       _showSnackbar("Erro desconhecido. Tente novamente.");
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
 

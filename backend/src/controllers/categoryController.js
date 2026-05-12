@@ -1,4 +1,4 @@
-const db = require('../database/db');
+﻿const db = require('../database/db');
 
 // POST /categories
 exports.create = (req, res) => {
@@ -101,3 +101,4 @@ exports.remove = (req, res) => {
     }
   );
 };
+

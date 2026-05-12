@@ -7,12 +7,25 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 
 import 'package:financeiro_app/main.dart';
+import 'package:financeiro_app/providers/meta_provider.dart';
+import 'package:financeiro_app/services/auth_service.dart';
+import 'package:financeiro_app/services/lancamento_service.dart';
 
 void main() {
   testWidgets('App loads without crashing', (WidgetTester tester) async {
-    await tester.pumpWidget(const FinanceiroApp());
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => AuthService()),
+          ChangeNotifierProvider(create: (_) => LancamentoService()),
+          ChangeNotifierProvider(create: (_) => MetaProvider()),
+        ],
+        child: const MyApp(),
+      ),
+    );
     await tester.pump();
 
     expect(find.byType(MaterialApp), findsOneWidget);

@@ -1,4 +1,4 @@
-const db = require('../database/db');
+﻿const db = require('../database/db');
 
 // POST /goals
 exports.create = (req, res) => {
@@ -100,3 +100,4 @@ exports.remove = (req, res) => {
     }
   );
 };
+

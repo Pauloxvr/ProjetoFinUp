@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_routes.dart';
 import '../core/app_theme.dart';
 import '../services/lancamento_service.dart';
@@ -17,38 +18,31 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  bool _loading = true;
-
   @override
   void initState() {
     super.initState();
-    _carregarDados();
-  }
-
-  Future<void> _carregarDados() async {
-    setState(() => _loading = true);
-    await LancamentoService.carregarLancamentos();
-    setState(() => _loading = false);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LancamentoService>().carregarLancamentos();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_loading) {
+    final lancamentos = context.watch<LancamentoService>();
+    final auth = context.watch<AuthService>();
+
+    if (lancamentos.loading) {
       return const Scaffold(
-        backgroundColor: Color(0xfff8fafc),
+        backgroundColor: AppTheme.background,
         body: Center(child: CircularProgressIndicator()),
       );
     }
-
-    final double saldo = LancamentoService.saldo;
-    final double entradaMes = LancamentoService.totalReceitas;
-    final double saidaMes = LancamentoService.totalDespesas;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _carregarDados,
+          onRefresh: () => lancamentos.carregarLancamentos(),
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(20),
@@ -62,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 /// Saudação
                 Text(
-                  "Olá, ${AuthService.nome}!",
+                  "Olá, ${auth.nome}!",
                   style: const TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
@@ -83,7 +77,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 24),
 
                 /// Card de Saldo
-                SaldoCard(saldo: saldo),
+                SaldoCard(saldo: lancamentos.saldo),
 
                 const SizedBox(height: 20),
 
@@ -93,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ResumoCard(
                         titulo: "Entrada no mês",
-                        valor: entradaMes,
+                        valor: lancamentos.totalReceitas,
                         cor: AppTheme.primaryBlue,
                       ),
                     ),
@@ -101,7 +95,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: ResumoCard(
                         titulo: "Saída no mês",
-                        valor: saidaMes,
+                        valor: lancamentos.totalDespesas,
                         cor: AppTheme.dangerRed,
                       ),
                     ),
@@ -127,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   iconColor: const Color(0xff22c55e),
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.novaReceita);
-                    _carregarDados();
+                    lancamentos.carregarLancamentos();
                   },
                 ),
                 const SizedBox(height: 12),
@@ -138,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   iconColor: const Color(0xffef4444),
                   onTap: () async {
                     await Navigator.pushNamed(context, AppRoutes.novaDespesa);
-                    _carregarDados();
+                    lancamentos.carregarLancamentos();
                   },
                 ),
                 const SizedBox(height: 12),
@@ -164,23 +158,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 const SizedBox(height: 8),
 
-                /// Gráfico pizza — receitas vs despesas
+                /// Gráfico pizza - receitas vs despesas
                 GraficoPizza(
-                  receitas: entradaMes,
-                  despesas: saidaMes,
+                  receitas: lancamentos.totalReceitas,
+                  despesas: lancamentos.totalDespesas,
                 ),
 
-                /// Gráfico barras — despesas por categoria
+                /// Gráfico barras - despesas por categoria
                 GraficoBarras(
                   titulo: "Despesas por categoria",
-                  lancamentos: LancamentoService.getDespesas(),
+                  lancamentos: lancamentos.despesas,
                   corBarra: const Color(0xffef4444),
                 ),
 
-                /// Gráfico barras — receitas por categoria
+                /// Gráfico barras - receitas por categoria
                 GraficoBarras(
                   titulo: "Receitas por categoria",
-                  lancamentos: LancamentoService.getReceitas(),
+                  lancamentos: lancamentos.receitas,
                   corBarra: AppTheme.primaryBlue,
                 ),
 
@@ -194,6 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final auth = context.read<AuthService>();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -258,7 +253,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: Center(
                 child: Text(
-                  AuthService.iniciais,
+                  auth.iniciais,
                   style: const TextStyle(
                     color: AppTheme.primaryBlue,
                     fontWeight: FontWeight.w700,
@@ -273,3 +268,4 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 }
+

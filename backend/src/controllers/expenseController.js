@@ -1,4 +1,4 @@
-const db = require('../database/db');
+﻿const db = require('../database/db');
 
 // POST /expenses
 exports.create = (req, res) => {
@@ -64,6 +64,60 @@ exports.list = (req, res) => {
   });
 };
 
+// PATCH /expenses/:id
+exports.update = (req, res) => {
+  const { id } = req.params;
+  const { amount, description, date, category_id } = req.body;
+
+  const fields = [];
+  const params = [];
+
+  if (amount !== undefined) {
+    if (typeof amount !== 'number' || amount <= 0) {
+      return res.status(400).json({ error: 'amount deve ser um número positivo' });
+    }
+    fields.push('amount = ?');
+    params.push(amount);
+  }
+
+  if (description !== undefined) {
+    fields.push('description = ?');
+    params.push(description || null);
+  }
+
+  if (date !== undefined) {
+    if (!date) return res.status(400).json({ error: 'date é obrigatório' });
+    fields.push('date = ?');
+    params.push(date);
+  }
+
+  if (category_id !== undefined) {
+    if (!category_id) {
+      return res.status(400).json({ error: 'category_id é obrigatório' });
+    }
+    fields.push('category_id = ?');
+    params.push(category_id);
+  }
+
+  if (fields.length === 0) {
+    return res.status(400).json({ error: 'Nenhum campo para atualizar' });
+  }
+
+  params.push(id, req.userId);
+
+  db.run(
+    `UPDATE expenses SET ${fields.join(', ')} WHERE id = ? AND user_id = ?`,
+    params,
+    function (err) {
+      if (err) return res.status(500).json({ error: err.message });
+      if (this.changes === 0) {
+        return res.status(404).json({ error: 'Despesa não encontrada' });
+      }
+      res.json({ message: 'Despesa atualizada' });
+    }
+  );
+};
+
 // DELETE /expenses/:id
 exports.remove = (req, res) => {
   const { id } = req.params;
@@ -80,3 +134,4 @@ exports.remove = (req, res) => {
     }
   );
 };
+

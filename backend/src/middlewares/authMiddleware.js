@@ -1,4 +1,4 @@
-const jwt = require('jsonwebtoken');
+﻿const jwt = require('jsonwebtoken');
 
 /**
  * Middleware que valida o JWT enviado no header Authorization.
@@ -29,3 +29,4 @@ module.exports = (req, res, next) => {
     next();
   });
 };
+

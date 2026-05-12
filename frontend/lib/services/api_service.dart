@@ -1,9 +1,12 @@
-import 'dart:convert';
+﻿import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class ApiService {
-  static const String _baseUrl = 'http://localhost:3000';
+  static const String _baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://localhost:3000',
+  );
   static const String _tokenKey = 'auth_token';
 
   static Future<String?> getToken() async {
@@ -101,3 +104,4 @@ class ApiException implements Exception {
   @override
   String toString() => message;
 }
+

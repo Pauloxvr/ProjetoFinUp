@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_routes.dart';
 import '../core/app_theme.dart';
 import '../models/lancamento_model.dart';
@@ -17,16 +18,15 @@ class LancamentosScreen extends StatelessWidget {
   String get _grafTitulo =>
       _isReceita ? "Entradas do mês" : "Despesas do mês";
 
-  List<LancamentoModel> get _lancamentos => _isReceita
-      ? LancamentoService.getReceitas()
-      : LancamentoService.getDespesas();
-
   Color get _corTema =>
       _isReceita ? AppTheme.primaryBlue : const Color(0xffef4444);
 
   @override
   Widget build(BuildContext context) {
-    final lancamentos = _lancamentos;
+    final lancamentoService = context.watch<LancamentoService>();
+    final lancamentos = _isReceita
+        ? lancamentoService.receitas
+        : lancamentoService.despesas;
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -349,6 +349,18 @@ class LancamentosScreen extends StatelessWidget {
                         _LancamentoItem(
                           lancamento: lancamentos[i],
                           corTema: _corTema,
+                          onTap: () async {
+                            await Navigator.pushNamed(
+                              context,
+                              _isReceita
+                                  ? AppRoutes.novaReceita
+                                  : AppRoutes.novaDespesa,
+                              arguments: lancamentos[i],
+                            );
+                            await context
+                                .read<LancamentoService>()
+                                .carregarLancamentos();
+                          },
                         ),
                         if (i < lancamentos.length - 1)
                           Container(
@@ -435,10 +447,12 @@ class LancamentosScreen extends StatelessWidget {
 class _LancamentoItem extends StatelessWidget {
   final LancamentoModel lancamento;
   final Color corTema;
+  final VoidCallback? onTap;
 
   const _LancamentoItem({
     required this.lancamento,
     required this.corTema,
+    this.onTap,
   });
 
   @override
@@ -449,9 +463,12 @@ class _LancamentoItem extends StatelessWidget {
         "${lancamento.data.month.toString().padLeft(2, '0')}/"
         "${lancamento.data.year}";
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: Row(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        child: Row(
         children: [
           // Ícone com categoria
           Container(
@@ -537,8 +554,10 @@ class _LancamentoItem extends StatelessWidget {
               color: corTema,
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
+

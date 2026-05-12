@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'lancamentos_screen.dart';
 import 'metas_screen.dart';
@@ -217,3 +217,4 @@ class _NavItem {
 
   const _NavItem({required this.icon, required this.label});
 }
+

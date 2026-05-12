@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../core/app_routes.dart';
 import '../core/app_theme.dart';
 import '../models/lancamento_model.dart';
 import '../services/lancamento_service.dart';
@@ -17,14 +19,20 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lancamentoService = context.watch<LancamentoService>();
     final lancamentos = [
-      ...LancamentoService.getReceitas(),
-      ...LancamentoService.getDespesas(),
+      ...lancamentoService.receitas,
+      ...lancamentoService.despesas,
     ];
     lancamentos.sort((a, b) => b.data.compareTo(a.data));
+    final lancamentosFiltrados = _filtrarLancamentos(lancamentos);
     
-    final totalReceitas = LancamentoService.totalReceitas;
-    final totalDespesas = LancamentoService.totalDespesas;
+    final totalReceitas = lancamentosFiltrados
+        .where((l) => l.isReceita)
+        .fold<double>(0, (sum, l) => sum + l.valor);
+    final totalDespesas = lancamentosFiltrados
+        .where((l) => !l.isReceita)
+        .fold<double>(0, (sum, l) => sum + l.valor);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -51,7 +59,7 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
 
               /// Lista de lançamentos
               Expanded(
-                child: _buildListaLancamentos(lancamentos),
+                child: _buildListaLancamentos(lancamentosFiltrados),
               ),
             ],
           ),
@@ -386,7 +394,23 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
               const SizedBox(height: 12),
 
               /// Lançamentos do dia
-              ...grupo.value.map((l) => _HistoricoItem(lancamento: l)),
+              ...grupo.value.map(
+                (l) => _HistoricoItem(
+                  lancamento: l,
+                  onTap: () async {
+                    await Navigator.pushNamed(
+                      context,
+                      l.isReceita
+                          ? AppRoutes.novaReceita
+                          : AppRoutes.novaDespesa,
+                      arguments: l,
+                    );
+                    await context
+                        .read<LancamentoService>()
+                        .carregarLancamentos();
+                  },
+                ),
+              ),
             ],
           );
         },
@@ -403,6 +427,23 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
       mapa.putIfAbsent(chave, () => []).add(l);
     }
     return mapa;
+  }
+
+  List<LancamentoModel> _filtrarLancamentos(List<LancamentoModel> lancamentos) {
+    if (_filtroSelecionado == 3) return lancamentos;
+
+    final now = DateTime.now();
+    final start = switch (_filtroSelecionado) {
+      0 => DateTime(now.year, now.month, 1),
+      1 => DateTime(now.year, now.month - 2, 1),
+      2 => DateTime(now.year, now.month - 5, 1),
+      _ => DateTime(1900),
+    };
+
+    return lancamentos.where((l) {
+      final data = DateTime(l.data.year, l.data.month, l.data.day);
+      return !data.isBefore(start);
+    }).toList();
   }
 
   String _formatarDataGrupo(DateTime data) {
@@ -463,18 +504,22 @@ class _HistoricoScreenState extends State<HistoricoScreen> {
 /// Widget de item do histórico
 class _HistoricoItem extends StatelessWidget {
   final LancamentoModel lancamento;
+  final VoidCallback? onTap;
 
-  const _HistoricoItem({required this.lancamento});
+  const _HistoricoItem({required this.lancamento, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final isReceita = lancamento.isReceita;
     final cor = isReceita ? AppTheme.primaryBlue : AppTheme.dangerRed;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -500,7 +545,7 @@ class _HistoricoItem extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+        child: Row(
         children: [
           /// Ícone
           Container(
@@ -634,6 +679,7 @@ class _HistoricoItem extends StatelessWidget {
             ],
           ),
         ],
+        ),
       ),
     );
   }
@@ -642,3 +688,4 @@ class _HistoricoItem extends StatelessWidget {
     return "${data.hour.toString().padLeft(2, '0')}:${data.minute.toString().padLeft(2, '0')}";
   }
 }
+

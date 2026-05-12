@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class AppTheme {
   AppTheme._();
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // PALETA SKEUOMORPHIC — TONS DE BRANCO A AZUL
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
+  // PALETA SKEUOMORPHIC - TONS DE BRANCO A AZUL
+  // ------------------------------------------------------------------------
 
   // Azuis principais
   static const Color primaryBlue = Color(0xff3b6cb7);
@@ -31,9 +31,9 @@ class AppTheme {
   static const Color background = Color(0xffeef2f7);
   static const Color cardBackground = Color(0xffffffff);
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
   // GRADIENTES SKEUOMORPHIC
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
 
   /// Gradiente principal para botões e cards destacados
   static const LinearGradient primaryGradient = LinearGradient(
@@ -92,9 +92,9 @@ class AppTheme {
     colors: [Color(0xfffca5a5), Color(0xffef4444), Color(0xffdc2626)],
   );
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
   // SOMBRAS SKEUOMORPHIC
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
 
   /// Sombra externa suave (neumorphism light)
   static List<BoxShadow> get softShadow => [
@@ -180,9 +180,9 @@ class AppTheme {
         ),
       ];
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
   // BORDAS E RAIOS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
 
   static const double cardRadius = 24;
   static const double inputRadius = 16;
@@ -202,12 +202,12 @@ class AppTheme {
         width: 1,
       );
 
-  // ══════════════════════════════════════════════════════════════════════════
-  // DECORAÇÕES REUTILIZÁVEIS
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
+  // DECORACOES REUTILIZAVEIS
+  // ------------------------------------------------------------------------
 
   /// Card padrão skeuomorphic
-  static BoxDecoration get skeuCard => BoxDecoration(
+  // DECORACOES REUTILIZAVEIS
         gradient: cardLightGradient,
         borderRadius: BorderRadius.circular(cardRadius),
         border: Border.all(
@@ -218,7 +218,7 @@ class AppTheme {
       );
 
   /// Card com borda azul
-  static BoxDecoration get skeuCardBlue => BoxDecoration(
+  // DECORACOES REUTILIZAVEIS
         gradient: cardLightGradient,
         borderRadius: BorderRadius.circular(cardRadius),
         border: Border.all(
@@ -229,7 +229,7 @@ class AppTheme {
       );
 
   /// Input field skeuomorphic
-  static BoxDecoration get skeuInput => BoxDecoration(
+  // DECORACOES REUTILIZAVEIS
         color: const Color(0xfff1f5f9),
         borderRadius: BorderRadius.circular(inputRadius),
         border: Border.all(
@@ -253,7 +253,7 @@ class AppTheme {
       );
 
   /// Botão primário skeuomorphic
-  static BoxDecoration get skeuButtonPrimary => BoxDecoration(
+  // DECORACOES REUTILIZAVEIS
         gradient: primaryGradient,
         borderRadius: BorderRadius.circular(buttonRadius),
         border: Border.all(
@@ -264,7 +264,7 @@ class AppTheme {
       );
 
   /// Botão secundário skeuomorphic
-  static BoxDecoration get skeuButtonSecondary => BoxDecoration(
+  // DECORACOES REUTILIZAVEIS
         gradient: metallicGradient,
         borderRadius: BorderRadius.circular(buttonRadius),
         border: Border.all(
@@ -274,9 +274,9 @@ class AppTheme {
         boxShadow: softShadow,
       );
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
   // ESTILOS DE TEXTO
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
 
   static const TextStyle headingLarge = TextStyle(
     fontSize: 28,
@@ -333,9 +333,9 @@ class AppTheme {
     letterSpacing: -0.5,
   );
 
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
   // TEMA DO APP
-  // ══════════════════════════════════════════════════════════════════════════
+  // ------------------------------------------------------------------------
 
   static ThemeData get theme => ThemeData(
         useMaterial3: true,
@@ -382,7 +382,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(chipRadius),
           ),
         ),
-        inputDecorationTheme: InputDecorationTheme(
+  // DECORACOES REUTILIZAVEIS
           filled: true,
           fillColor: const Color(0xfff1f5f9),
           border: OutlineInputBorder(
@@ -413,3 +413,4 @@ class AppTheme {
         ),
       );
 }
+

@@ -1,146 +1,83 @@
-# 💰 Personal Finance Manager
+﻿# FinUp
 
-<p align="center">
-  <strong>A modern mobile solution for personal financial management</strong><br>
-  Organize your finances, track expenses, and achieve your financial goals.
-</p>
+Aplicativo acadêmico de controle financeiro pessoal com frontend Flutter, API Node.js/Express e banco SQLite.
 
----
+## Funcionalidades
 
-## 📖 Overview
+- Cadastro, login e sessão com JWT.
+- Categorias padrão criadas automaticamente para novos usuários.
+- Cadastro, listagem, edição e remoção de receitas e despesas.
+- Metas financeiras.
+- Dashboard com saldo, entradas, saídas e gráficos.
+- Histórico com filtros por período.
+- Perfil com estatísticas reais de lançamentos, metas e economia.
 
-**Personal Finance Manager** is a mobile application designed to help individuals manage their finances efficiently and intuitively.  
+## Stack
 
-The system enables users to track income and expenses, visualize financial data, and set goals — all in a centralized and user-friendly environment.
+- Frontend: Flutter/Dart
+- Backend: Node.js, Express
+- Banco: SQLite
+- Gráficos: fl_chart
 
-The project focuses on **simplicity, usability, and financial awareness**, making it accessible even for users with no prior financial knowledge.
+## Como Rodar
 
----
+### Backend
 
-## 🎯 Key Features
-
-- 🔐 User authentication and account management  
-- 💵 Income (receitas) tracking  
-- 💸 Expense (despesas) tracking  
-- 🏷️ Custom categories for better organization  
-- 📊 Real-time balance overview  
-- 📈 Financial reports and data visualization  
-- 🎯 Financial goal creation and tracking  
-- 🧾 Transaction history with filters  
-- 📱 Mobile-first intuitive interface  
-
----
-
-## 🧱 Tech Stack
-
-### 📱 Frontend
-- Flutter  
-- Dart  
-
-### ⚙️ Backend
-- Node.js  
-- RESTful API  
-
-### 🗄️ Database
-- SQLite  
-
-### 📊 Data Visualization
-- fl_chart (Flutter charting library for financial data visualization)
-
----
-
-## 🏗️ Architecture
-
-The system follows a **client-server architecture**:
-
-```
-Mobile App (Flutter)
-        ↓
-   REST API (Node.js)
-        ↓
-   Database (SQLite)
+```powershell
+cd backend
+npm install
+npm start
 ```
 
-- The mobile app handles user interaction and UI  
-- The backend processes business logic and authentication  
-- The database stores financial data securely  
+A API fica disponível em:
 
----
+```text
+http://localhost:3000
+```
 
-## 📱 Application Screens
+Healthcheck:
 
-- Login & Registration  
-- Dashboard (Financial Overview)  
-- Income Management  
-- Expense Management  
-- Financial Goals  
-- Transaction History  
-- User Profile  
+```powershell
+Invoke-RestMethod http://localhost:3000/
+```
 
----
+### Frontend
 
-## 🔐 Non-Functional Requirements
+Instale o Flutter SDK e garanta que o comando `flutter` esteja no PATH.
 
-- High usability and intuitive UX  
-- Secure data handling and authentication  
-- Fast response time  
-- Cross-device compatibility  
-- Data consistency and reliability  
+```powershell
+cd frontend
+flutter pub get
+flutter run -d chrome --dart-define=API_URL=http://localhost:3000
+```
 
----
+Para validar:
 
-## 📊 Project Goals
+```powershell
+flutter analyze
+flutter test
+```
 
-- Improve personal financial organization  
-- Provide clear financial insights  
-- Reduce dependency on manual tools (spreadsheets, notes)  
-- Encourage better financial habits  
-- Support financial planning and decision-making  
+## Endpoints Principais
 
----
+- `POST /users`: cria usuário e categorias padrão.
+- `POST /auth/login`: autentica e retorna token.
+- `GET /users/me`: usuário logado.
+- `GET/POST/PATCH/DELETE /categories`
+- `GET/POST/PATCH/DELETE /incomes`
+- `GET/POST/PATCH/DELETE /expenses`
+- `GET/POST/PATCH/DELETE /goals`
+- `GET /dashboard`
 
-## ⚠️ Limitations
+Rotas protegidas exigem:
 
-- Designed for **individual users only**  
-- No enterprise or business features  
-- No direct bank API integration (manual input required)  
+```text
+Authorization: Bearer <token>
+```
 
----
+## Observações
 
-## 🚧 Project Status
+O frontend usa `API_URL` via `--dart-define`. Se não for informado, usa `http://localhost:3000`.
 
-> 🟡 **In Development**
+Em Android emulator, normalmente a API local deve ser acessada por `http://10.0.2.2:3000`.
 
-- ✅ UI/UX structure implemented  
-- ✅ Core features defined  
-- 🚧 Backend integration in progress  
-- 🚧 Data persistence improvements planned  
-- 🔜 UI refinements and performance optimization  
-
----
-
-## 👨‍💻 Team
-
-Developed by students from **USCS – Universidade Municipal de São Caetano do Sul**:
-
-- Gustavo Nascimento Millan  
-- Lucas Valério Banhara Copeski  
-- Lucas Theodoro Ribas  
-- Lucas Zezi Razzante  
-- Rebeca Mendes de Souza  
-- Thiago Silva Rodrigues  
-- Paulo Henrique do Santos Xavier  
-
----
-
-## 📄 License
-
-This project is intended for **academic and educational purposes only**.
-
----
-
-## ⭐ Contribution
-
-Contributions, suggestions, and improvements are welcome!
-
-If you like this project, consider giving it a ⭐ on GitHub.

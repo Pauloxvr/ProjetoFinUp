@@ -8,6 +8,7 @@ router.use(auth);
 
 router.post('/', incomeController.create);
 router.get('/', incomeController.list);
+router.patch('/:id', incomeController.update);
 router.delete('/:id', incomeController.remove);
 
 module.exports = router;

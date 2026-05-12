@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_theme.dart';
 import '../models/lancamento_model.dart';
 import '../services/lancamento_service.dart';
@@ -29,10 +30,13 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
 
   DateTime _dataSelecionada = DateTime.now();
   Categoria? _categoriaSelecionada;
+  LancamentoModel? _lancamentoEditando;
   bool _parcelado = false;
   bool _loading = true;
+  bool _initializedArgs = false;
 
   bool get _isReceita => widget.tipo == TipoLancamento.receita;
+  bool get _isEditing => _lancamentoEditando != null;
 
   @override
   void initState() {
@@ -40,9 +44,34 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
     _carregarCategorias();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initializedArgs) return;
+    _initializedArgs = true;
+
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is LancamentoModel) {
+      _lancamentoEditando = args;
+      _valorController.text = args.valor.toStringAsFixed(2);
+      _descricaoController.text = args.titulo;
+      _dataSelecionada = args.data;
+      _parcelado = args.parcelado;
+    }
+  }
+
   Future<void> _carregarCategorias() async {
-    await CategoriaService.carregarCategorias();
-    setState(() => _loading = false);
+    try {
+      await CategoriaService.carregarCategorias();
+    } on ApiException catch (e) {
+      _showSnackbar(e.message);
+    } catch (_) {
+      _showSnackbar("Erro ao carregar categorias");
+    } finally {
+      if (mounted) {
+        setState(() => _loading = false);
+      }
+    }
   }
 
   @override
@@ -167,7 +196,7 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              widget.titulo,
+              _isEditing ? "Editar lançamento" : widget.titulo,
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -188,6 +217,14 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
     final categorias = _isReceita
         ? CategoriaService.getCategoriasReceita()
         : CategoriaService.getCategoriasDespesa();
+    if (_categoriaSelecionada == null && _lancamentoEditando?.categoriaId != null) {
+      for (final categoria in categorias) {
+        if (categoria.id == _lancamentoEditando!.categoriaId) {
+          _categoriaSelecionada = categoria;
+          break;
+        }
+      }
+    }
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -346,7 +383,7 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
 
               /// Botão salvar
               SkeuButton(
-                text: widget.textoBotao,
+                text: _isEditing ? "Salvar Alterações" : widget.textoBotao,
                 icon: Icons.check_rounded,
                 variant: _isReceita
                     ? SkeuButtonVariant.primary
@@ -619,7 +656,7 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
     }
 
     final lancamento = LancamentoModel(
-      id: 0,
+      id: _lancamentoEditando?.id ?? 0,
       titulo: _descricaoController.text.isNotEmpty
           ? _descricaoController.text
           : _categoriaSelecionada!.name,
@@ -632,10 +669,19 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
 
     try {
       if (widget.tipo == TipoLancamento.receita) {
-        await LancamentoService.adicionarReceita(lancamento);
+        if (_isEditing) {
+          await context.read<LancamentoService>().atualizarReceita(lancamento);
+        } else {
+          await context.read<LancamentoService>().adicionarReceita(lancamento);
+        }
       } else {
-        await LancamentoService.adicionarDespesa(lancamento);
+        if (_isEditing) {
+          await context.read<LancamentoService>().atualizarDespesa(lancamento);
+        } else {
+          await context.read<LancamentoService>().adicionarDespesa(lancamento);
+        }
       }
+      if (!mounted) return;
       Navigator.pop(context);
     } on ApiException catch (e) {
       _showSnackbar(e.message);
@@ -657,3 +703,4 @@ class _LancamentoFormScreenState extends State<LancamentoFormScreen> {
     );
   }
 }
+

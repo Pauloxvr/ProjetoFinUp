@@ -1,4 +1,4 @@
-const bcrypt = require('bcrypt');
+﻿const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../database/db');
 const { validateEmail, validatePassword } = require('../utils/validators');
@@ -54,3 +54,4 @@ exports.login = (req, res) => {
     }
   );
 };
+

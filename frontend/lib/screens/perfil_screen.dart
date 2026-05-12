@@ -1,7 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import '../core/app_routes.dart';
 import '../core/app_theme.dart';
+import '../providers/meta_provider.dart';
 import '../services/auth_service.dart';
+import '../services/lancamento_service.dart';
 import '../widgets/skeu_button.dart';
 
 class PerfilScreen extends StatefulWidget {
@@ -17,6 +20,9 @@ class _PerfilScreenState extends State<PerfilScreen> {
   @override
   Widget build(BuildContext context) {
     final podeVoltar = Navigator.canPop(context);
+    final auth = context.watch<AuthService>();
+    final lancamentos = context.watch<LancamentoService>();
+    final metas = context.watch<MetaProvider>();
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -37,7 +43,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   const SizedBox(height: 30),
 
                   /// Card do perfil
-                  _buildProfileCard(),
+                  _buildProfileCard(auth, lancamentos, metas),
 
                   const SizedBox(height: 24),
 
@@ -155,7 +161,19 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 
-  Widget _buildProfileCard() {
+  Widget _buildProfileCard(
+    AuthService auth,
+    LancamentoService lancamentos,
+    MetaProvider metas,
+  ) {
+    final totalLancamentos =
+        lancamentos.receitas.length + lancamentos.despesas.length;
+    final economia = lancamentos.totalReceitas <= 0
+        ? 0
+        : ((lancamentos.saldo / lancamentos.totalReceitas) * 100)
+            .clamp(0, 100)
+            .round();
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -214,7 +232,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      AuthService.iniciais,
+                      auth.iniciais,
                       style: const TextStyle(
                         fontSize: 36,
                         fontWeight: FontWeight.w700,
@@ -229,7 +247,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
 
               /// Nome
               Text(
-                AuthService.nome,
+                auth.nome,
                 style: const TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
@@ -259,7 +277,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      AuthService.email,
+                      auth.email,
                       style: const TextStyle(
                         color: AppTheme.primaryBlue,
                         fontSize: 14,
@@ -276,7 +294,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _buildStat("32", "Lançamentos"),
+                    child: _buildStat("$totalLancamentos", "Lançamentos"),
                   ),
                   Container(
                     width: 1,
@@ -284,7 +302,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     color: AppTheme.silverMist,
                   ),
                   Expanded(
-                    child: _buildStat("3", "Metas"),
+                    child: _buildStat("${metas.metas.length}", "Metas"),
                   ),
                   Container(
                     width: 1,
@@ -292,7 +310,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                     color: AppTheme.silverMist,
                   ),
                   Expanded(
-                    child: _buildStat("85%", "Economia"),
+                    child: _buildStat("$economia%", "Economia"),
                   ),
                 ],
               ),
@@ -626,7 +644,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                       variant: SkeuButtonVariant.danger,
                       height: 48,
                       onPressed: () {
-                        AuthService.logout();
+                        context.read<AuthService>().logout();
                         Navigator.pushNamedAndRemoveUntil(
                           context,
                           AppRoutes.login,
@@ -644,3 +662,4 @@ class _PerfilScreenState extends State<PerfilScreen> {
     );
   }
 }
+

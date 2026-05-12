@@ -1,4 +1,4 @@
-const path = require('path');
+﻿const path = require('path');
 const sqlite3 = require('sqlite3').verbose();
 
 // caminho absoluto para o arquivo do banco (na raiz da pasta backend)
@@ -90,3 +90,4 @@ db.serialize(() => {
 });
 
 module.exports = db;
+

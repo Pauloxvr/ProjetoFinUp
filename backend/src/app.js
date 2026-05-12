@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const app = express();
 
@@ -16,7 +16,7 @@ app.use(express.json());
 
 // rota de healthcheck
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'API rodando 🚀' });
+  res.json({ status: 'ok', message: 'API rodando' });
 });
 
 // importar rotas
@@ -49,3 +49,4 @@ app.use((err, req, res, next) => {
 });
 
 module.exports = app;
+

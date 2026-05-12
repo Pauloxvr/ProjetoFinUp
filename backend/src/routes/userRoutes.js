@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 
 const userController = require('../controllers/userController');
@@ -12,3 +12,4 @@ router.get('/me', auth, userController.me);
 router.patch('/me', auth, userController.update);
 
 module.exports = router;
+

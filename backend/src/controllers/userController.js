@@ -1,31 +1,62 @@
-const bcrypt = require('bcrypt');
+﻿const bcrypt = require('bcrypt');
 const db = require('../database/db');
 const { validateEmail, validatePassword, validateString } = require('../utils/validators');
 
-// POST /users - cadastrar novo usuário
+const defaultCategories = [
+  { name: 'Salário', type: 'income' },
+  { name: 'Investimentos', type: 'income' },
+  { name: 'Freelance', type: 'income' },
+  { name: 'Alimentação', type: 'expense' },
+  { name: 'Transporte', type: 'expense' },
+  { name: 'Moradia', type: 'expense' },
+  { name: 'Saúde', type: 'expense' },
+  { name: 'Lazer', type: 'expense' },
+];
+
+function createDefaultCategories(userId, callback) {
+  const stmt = db.prepare(
+    `INSERT INTO categories (name, type, user_id) VALUES (?, ?, ?)`
+  );
+  let pending = defaultCategories.length;
+  let failed = false;
+
+  defaultCategories.forEach((category) => {
+    stmt.run([category.name, category.type, userId], (err) => {
+      if (failed) return;
+      if (err) {
+        failed = true;
+        stmt.finalize();
+        callback(err);
+        return;
+      }
+
+      pending -= 1;
+      if (pending === 0) {
+        stmt.finalize(callback);
+      }
+    });
+  });
+}
+
 exports.create = async (req, res) => {
   const { name, email, password } = req.body;
 
-  // validação de campos obrigatórios
   if (!name || !email || !password) {
     return res.status(400).json({
       error: 'Os campos name, email e password são obrigatórios'
     });
   }
 
-  // validação de email
   if (!validateEmail(email)) {
     return res.status(400).json({ error: 'Email inválido' });
   }
 
-  // validação de senha
   if (!validatePassword(password)) {
     return res.status(400).json({
       error: 'A senha deve ter entre 6 e 100 caracteres'
     });
   }
 
-  // validação de nome
   if (!validateString(name, 2, 100)) {
     return res.status(400).json({
       error: 'O nome deve ter entre 2 e 100 caracteres'
@@ -47,32 +78,16 @@ exports.create = async (req, res) => {
         }
 
         const userId = this.lastID;
-        const defaultCategories = [
-          { name: 'Salário', type: 'income' },
-          { name: 'Investimentos', type: 'income' },
-          { name: 'Freelance', type: 'income' },
-          { name: 'Alimentação', type: 'expense' },
-          { name: 'Transporte', type: 'expense' },
-          { name: 'Saúde', type: 'expense' },
-          { name: 'Lazer', type: 'expense' },
-        ];
+        createDefaultCategories(userId, (categoryErr) => {
+          if (categoryErr) {
+            return res.status(500).json({ error: categoryErr.message });
+          }
 
-        defaultCategories.forEach((category) => {
-          db.run(
-            `INSERT INTO categories (name, type, user_id) VALUES (?, ?, ?)`,
-            [category.name, category.type, userId],
-            (categoryErr) => {
-              if (categoryErr) {
-                console.error('Erro ao criar categoria padrão:', categoryErr.message);
-              }
-            }
-          );
-        });
-
-        res.status(201).json({
-          id: userId,
-          name,
-          email
+          res.status(201).json({
+            id: userId,
+            name,
+            email
+          });
         });
       }
     );
@@ -81,7 +96,6 @@ exports.create = async (req, res) => {
   }
 };
 
-// GET /users/me - dados do usuário logado
 exports.me = (req, res) => {
   db.get(
     `SELECT id, name, email, created_at FROM users WHERE id = ?`,
@@ -94,7 +108,6 @@ exports.me = (req, res) => {
   );
 };
 
-// PATCH /users/me - atualizar dados do usuário logado
 exports.update = async (req, res) => {
   const { name, password } = req.body;
 
@@ -106,7 +119,7 @@ exports.update = async (req, res) => {
       return res.status(400).json({ error: 'Nome deve ter entre 2 e 100 caracteres' });
     }
     fields.push('name = ?');
-    params.push(name);
+    params.push(name.trim());
   }
 
   if (password !== undefined) {
@@ -137,3 +150,4 @@ exports.update = async (req, res) => {
     }
   );
 };
+

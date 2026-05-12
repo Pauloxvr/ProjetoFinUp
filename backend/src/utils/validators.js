@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Utilitários de validação
  */
 
@@ -38,3 +38,4 @@ module.exports = {
   validateString,
   validatePassword
 };
+

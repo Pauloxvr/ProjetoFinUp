@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../core/app_theme.dart';
 
 /// Card skeuomorphic com múltiplas variantes
@@ -134,3 +134,4 @@ enum SkeuCardVariant {
   flat,
   premium,
 }
+
